@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cryptocontainer-lab"
+version = "0.1.0"
+description = "Forensic research toolkit for detecting and validating cryptographic containers"
+authors = [{ name = "Forensic Lab", email = "lab@example.com" }]
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "typer>=0.9",
+    "rich>=13.7.0",
+]
+license = { text = "MIT" }
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.7"]
+
+[project.scripts]
+cryptocontainer-lab = "cryptocontainer_lab.cli.main:app"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
