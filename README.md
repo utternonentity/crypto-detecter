@@ -1,31 +1,57 @@
 # Cryptocontainer Lab
 
-Prototype forensic toolkit for detecting and validating cryptographic containers within court-oriented workflows.
+Исследовательский форензик-инструментарий для обнаружения, валидации и документирования криптографических контейнеров в рамках судебных процессов. Проект ориентирован на сценарии, где необходимо быстро зафиксировать артефакты, проверить целостность и подготовить отчет без лишней инфраструктуры.
 
-## Project Layout
+## Возможности
+- **Сканирование носителей**: поиск контейнеров на дисковых образах и в директориях.
+- **Контекст дела**: создание и ведение структуры кейса с фиксированием исследователя и путей к артефактам.
+- **Валидация**: проверка базовых свойств контейнеров (формат, метаданные, доступность ключевых сегментов).
+- **Отчётность**: формирование итоговых отчётов в JSON для интеграции с внешними системами.
+- **CLI и GUI**: готовый интерфейс командной строки и заготовка для графической оболочки (PySide6 — опционально).
+
+## Требования
+- Python **3.11+**
+- Зависимости из `pyproject.toml`: `typer`, `rich` (для GUI дополнительно `PySide6`).
+
+## Установка
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install -e .  # установка в режиме разработки
+```
+
+## Быстрый старт
+Создайте дело и просканируйте диск через CLI:
+```bash
+cryptocontainer-lab case-new ./cases/demo --examiner "Аналитик"
+cryptocontainer-lab scan-disk --case-path ./cases/demo --image disk.dd
+cryptocontainer-lab report --case-path ./cases/demo --out ./cases/demo/reports/report.json --fmt json
+```
+Полученный JSON-отчёт можно дополнительно обработать или приложить к материалам дела.
+
+## Структура проекта
 ```
 pyproject.toml
 src/
   cryptocontainer_lab/
-    core/
-    detector/
-    context/
-    memory/
-    unlock/
-    recover/
-    crack/
-    report/
-    cli/
-    gui/
+    cli/       # команды CLI, точка входа: main.py
+    core/      # базовые модели и константы
+    detector/  # логика обнаружения контейнеров
+    context/   # управление делом и артефактами
+    memory/    # работа с временными данными
+    unlock/    # процедуры разблокировки
+    recover/   # восстановление содержимого
+    crack/     # подготовка к перебору ключей (реализация заглушена)
+    report/    # генерация отчётов
+    gui/       # набросок графического интерфейса
 ```
 
-## Usage
-Create a case and scan artefacts using the CLI (Python 3.11+):
+## Примечания
+- Инструмент остаётся прототипом: криптографическая проверка упрощена, а функционал перебора ключей сознательно не реализован.
+- Для работы GUI требуется установка зависимостей из набора `gui`:
+  ```bash
+  pip install -e .[gui]
+  ```
 
-```
-cryptocontainer-lab case-new ./cases/demo --examiner "Analyst"
-cryptocontainer-lab scan-disk --case-path ./cases/demo --image disk.dd
-cryptocontainer-lab report --case-path ./cases/demo --out ./cases/demo/reports/report.json --fmt json
-```
-
-The tool is a research prototype; cryptographic validation logic is simplified and cracking functionality is intentionally unimplemented.
+## Лицензия
+Проект распространяется под лицензией MIT. Подробности см. в файле `LICENSE` (если присутствует) или в метаданных `pyproject.toml`.
