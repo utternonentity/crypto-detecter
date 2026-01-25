@@ -163,7 +163,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self._scan_thread.start()
 
     def _setup_copy_shortcut(self) -> None:
-        self._copy_shortcut = QtGui.QShortcut(QtGui.QKeySequence.Copy, self._results_table)
+        # PyQt6: QKeySequence.StandardKey.Copy
+        # PyQt5: QKeySequence.Copy
+        try:
+            seq = QtGui.QKeySequence.Copy
+        except AttributeError:
+            seq = QtGui.QKeySequence(QtGui.QKeySequence.StandardKey.Copy)
+
+        self._copy_shortcut = QtGui.QShortcut(seq, self._results_table)
+
         self._copy_shortcut.activated.connect(self._copy_selected_cells)
 
     def _show_results_context_menu(self, position: QtCore.QPoint) -> None:

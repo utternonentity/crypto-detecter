@@ -37,14 +37,20 @@ def _scan_block(block: bytes, offset: int, source_path: Path) -> Iterable[Contai
         )
 
 
-def _looks_like_veracrypt_container(file_path: Path, header_block: bytes) -> bool:
-    """Heuristic check for VeraCrypt/TrueCrypt containers."""
+def _veracrypt_confidence(file_path: Path, header_block: bytes) -> Optional[float]:
+    """Return a confidence score for VeraCrypt/TrueCrypt candidates based on heuristics."""
     if file_path.suffix.lower() not in VERACRYPT_EXTENSIONS:
-        return False
+        return None
+    if not header_block:
+        return 0.35
     if len(header_block) < 1024:
-        return False
+        return 0.4
     entropy = estimate_entropy(header_block[:4096])
-    return entropy >= 7.2
+    if entropy >= 7.2:
+        return 0.65
+    if entropy >= 6.8:
+        return 0.5
+    return 0.4
 
 
 def _is_reparse_point(path: Path) -> bool:
@@ -106,15 +112,21 @@ def scan_file_for_containers(
                 discovered.append(candidate)
 
         if not any(item.container_type in {ContainerType.VERACRYPT, ContainerType.TRUECRYPT} for item in discovered):
-            if _looks_like_veracrypt_container(file_path, header_block):
+            confidence = _veracrypt_confidence(file_path, header_block)
+            if confidence is not None:
+                note = (
+                    "Высокая энтропия заголовка и типичное расширение VeraCrypt/TrueCrypt."
+                    if confidence >= 0.6
+                    else "Типичное расширение VeraCrypt/TrueCrypt (эвристика)."
+                )
                 discovered.append(
                     ContainerCandidate(
                         candidate_id=str(uuid.uuid4()),
                         source_path=file_path,
                         offset=0,
                         container_type=ContainerType.VERACRYPT,
-                        confidence=0.6,
-                        notes="Высокая энтропия заголовка и типичное расширение VeraCrypt/TrueCrypt.",
+                        confidence=confidence,
+                        notes=note,
                     )
                 )
 
