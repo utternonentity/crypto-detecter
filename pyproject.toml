@@ -16,7 +16,7 @@ dependencies = [
 license = { text = "MIT" }
 
 [project.optional-dependencies]
-gui = ["PySide6>=6.7"]
+gui = ["PyQt6>=6.7"]
 
 [project.scripts]
 cryptocontainer-lab = "cryptocontainer_lab.cli.main:app"

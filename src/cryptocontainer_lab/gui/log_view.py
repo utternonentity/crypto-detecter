@@ -4,7 +4,7 @@ from __future__ import annotations
 import html
 from typing import Iterable, Optional
 
-from PySide6 import QtCore, QtGui, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 
 class LogView(QtWidgets.QTextEdit):
@@ -18,7 +18,7 @@ class LogView(QtWidgets.QTextEdit):
         super().__init__(parent)
         self._max_lines = max_lines
         self.setReadOnly(True)
-        self.setLineWrapMode(QtWidgets.QTextEdit.NoWrap)
+        self.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.NoWrap)
         self.setFont(QtGui.QFont("Monospace"))
         self.document().setDefaultStyleSheet("pre { margin: 0; }")
         self.setPlaceholderText("Log messages will appear here…")
@@ -37,7 +37,7 @@ class LogView(QtWidgets.QTextEdit):
     def append_message(self, message: str, level: str = "INFO") -> None:
         """Append a message with a simple level prefix."""
 
-        timestamp = QtCore.QDateTime.currentDateTime().toString(QtCore.Qt.ISODate)
+        timestamp = QtCore.QDateTime.currentDateTime().toString(QtCore.Qt.DateFormat.ISODate)
         colored = self._format_line(timestamp, level.upper(), message)
         self.append(colored)
         self._trim()
@@ -54,7 +54,7 @@ class LogView(QtWidgets.QTextEdit):
         doc = self.document()
         while doc.blockCount() > self._max_lines:
             cursor = QtGui.QTextCursor(doc.begin())
-            cursor.select(QtGui.QTextCursor.BlockUnderCursor)
+            cursor.select(QtGui.QTextCursor.SelectionType.BlockUnderCursor)
             cursor.removeSelectedText()
             cursor.deleteChar()
 
