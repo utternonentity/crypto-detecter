@@ -4,7 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Optional
 
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtGui, QtWidgets
 
 from ..core.models import ContainerCandidate, ContainerType
 from ..detector.scanner import scan_path_for_containers
@@ -19,9 +19,10 @@ class ScanWorker(QtCore.QObject):
     error = QtCore.pyqtSignal(str)
     finished = QtCore.pyqtSignal(int)
 
-    def __init__(self, target: Path) -> None:
+    def __init__(self, target: Path, min_confidence: float) -> None:
         super().__init__()
         self._target = target
+        self._min_confidence = min_confidence
 
     @QtCore.pyqtSlot()
     def run(self) -> None:
@@ -34,6 +35,8 @@ class ScanWorker(QtCore.QObject):
 
             def handle_result(candidate: ContainerCandidate) -> None:
                 nonlocal count
+                if candidate.confidence <= self._min_confidence:
+                    return
                 count += 1
                 self.found.emit(candidate)
 
@@ -59,6 +62,7 @@ class MainWindow(QtWidgets.QMainWindow):
         super().__init__()
         self._scan_thread: Optional[QtCore.QThread] = None
         self._scan_worker: Optional[ScanWorker] = None
+        self._min_confidence = 0.74
 
         self.setWindowTitle("Сканер криптоконтейнеров")
         self.resize(1200, 800)
@@ -83,9 +87,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self._results_table = QtWidgets.QTableWidget()
         self._results_table.setAlternatingRowColors(True)
         self._results_table.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
-        self._results_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self._results_table.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems)
+        self._results_table.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self._results_table.horizontalHeader().setStretchLastSection(True)
+        self._results_table.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self._results_table.customContextMenuRequested.connect(self._show_results_context_menu)
         self._apply_table_headers()
+        self._copy_shortcut: Optional[QtGui.QShortcut] = None
+        self._setup_copy_shortcut()
 
         top_form = QtWidgets.QFormLayout()
         path_row = QtWidgets.QHBoxLayout()
@@ -139,7 +148,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self._scan_button.setEnabled(False)
 
         self._scan_thread = QtCore.QThread()
-        self._scan_worker = ScanWorker(target)
+        self._scan_worker = ScanWorker(target, self._min_confidence)
         self._scan_worker.moveToThread(self._scan_thread)
 
         self._scan_thread.started.connect(self._scan_worker.run)
@@ -152,6 +161,30 @@ class MainWindow(QtWidgets.QMainWindow):
         self._scan_thread.finished.connect(self._scan_thread.deleteLater)
 
         self._scan_thread.start()
+
+    def _setup_copy_shortcut(self) -> None:
+        self._copy_shortcut = QtGui.QShortcut(QtGui.QKeySequence.Copy, self._results_table)
+        self._copy_shortcut.activated.connect(self._copy_selected_cells)
+
+    def _show_results_context_menu(self, position: QtCore.QPoint) -> None:
+        menu = QtWidgets.QMenu(self)
+        copy_action = menu.addAction("Копировать")
+        copy_action.triggered.connect(self._copy_selected_cells)
+        menu.exec(self._results_table.viewport().mapToGlobal(position))
+
+    def _copy_selected_cells(self) -> None:
+        items = self._results_table.selectedItems()
+        if not items:
+            return
+        rows: dict[int, dict[int, str]] = {}
+        for item in items:
+            rows.setdefault(item.row(), {})[item.column()] = item.text()
+        lines = []
+        for row in sorted(rows):
+            cols = rows[row]
+            line = "\t".join(cols[col] for col in sorted(cols))
+            lines.append(line)
+        QtWidgets.QApplication.clipboard().setText("\n".join(lines))
 
     def _append_result(self, candidate: ContainerCandidate) -> None:
         type_labels = {
