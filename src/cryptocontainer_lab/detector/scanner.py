@@ -60,21 +60,36 @@ def scan_file_for_containers(
 ) -> list[ContainerCandidate]:
     """Scan a single file/device for container headers."""
     discovered: list[ContainerCandidate] = []
+    seen: set[tuple[ContainerType, int]] = set()
+    max_signature_len = max(len(BITLOCKER_HEADER), len(LUKS_MAGIC), len(VERACRYPT_TC_HEADER))
+    overlap = max_signature_len - 1
     with file_path.open("rb") as handle:
         for base_offset in DEFAULT_SCAN_OFFSETS:
             handle.seek(base_offset)
             block = handle.read(HEADER_WINDOW)
             for candidate in _scan_block(block, base_offset, file_path):
+                key = (candidate.container_type, candidate.offset)
+                if key in seen:
+                    continue
+                seen.add(key)
                 discovered.append(candidate)
 
         handle.seek(0)
         offset = 0
+        tail = b""
         while True:
             block = handle.read(block_size)
             if not block:
                 break
-            for candidate in _scan_block(block, offset, file_path):
+            combined = tail + block
+            base_offset = offset - len(tail)
+            for candidate in _scan_block(combined, base_offset, file_path):
+                key = (candidate.container_type, candidate.offset)
+                if key in seen:
+                    continue
+                seen.add(key)
                 discovered.append(candidate)
+            tail = block[-overlap:] if overlap > 0 else b""
             offset += len(block)
     return discovered
 
@@ -105,5 +120,13 @@ def scan_path_for_containers(
             results.append(candidate)
             if on_result:
                 on_result(candidate)
+            if candidate.confidence >= 0.75:
+                LOGGER.info(
+                    "Обнаружен криптоконтейнер: %s (уверенность %.0f%%) %s @ 0x%X",
+                    candidate.container_type.value,
+                    candidate.confidence * 100,
+                    candidate.source_path,
+                    candidate.offset,
+                )
     LOGGER.info("Сканирование завершено. Найдено контейнеров: %d", len(results))
     return results
