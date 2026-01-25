@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "cryptocontainer-lab"
 version = "0.1.0"
-description = "Forensic research toolkit for detecting and validating cryptographic containers"
+description = "Scanner for detecting cryptographic containers on mounted disks"
 authors = [{ name = "Forensic Lab", email = "lab@example.com" }]
 readme = "README.md"
 requires-python = ">=3.11"

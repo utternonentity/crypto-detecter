@@ -1,0 +1,2 @@
+[console_scripts]
+cryptocontainer-lab = cryptocontainer_lab.cli.main:app

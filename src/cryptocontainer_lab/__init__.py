@@ -1,3 +1,3 @@
-"""Cryptocontainer Lab package: forensic-focused tooling for detecting and validating encrypted containers."""
+"""Cryptocontainer Lab package: signature-based scanning for cryptographic containers."""
 
 __all__ = []

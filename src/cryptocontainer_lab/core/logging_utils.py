@@ -9,10 +9,10 @@ from typing import Optional
 DEFAULT_FORMAT = "%(asctime)s [%(levelname)s] %(name)s: %(message)s"
 
 
-def setup_case_logger(log_dir: Path, level: int = logging.INFO) -> logging.Logger:
-    """Configure logging for a case-specific session."""
+def setup_logger(log_dir: Path, level: int = logging.INFO) -> logging.Logger:
+    """Configure logging for a scanning session."""
     log_dir.mkdir(parents=True, exist_ok=True)
-    log_path = log_dir / "case.log"
+    log_path = log_dir / "scan.log"
     logger = logging.getLogger("cryptocontainer_lab")
     logger.setLevel(level)
 

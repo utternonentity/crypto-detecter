@@ -31,7 +31,7 @@ def get_version(distribution_name: str = "cryptocontainer-lab") -> str:
 def build_cli(help_text: Optional[str] = None) -> typer.Typer:
     """Construct a Typer application embedding the default commands."""
 
-    app = typer.Typer(help=help_text or "Cryptocontainer Lab CLI")
+    app = typer.Typer(help=help_text or "CLI для сканирования криптоконтейнеров")
     app.add_typer(main.app)
     return app
 

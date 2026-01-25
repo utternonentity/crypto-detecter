@@ -1,4 +1,4 @@
-"""I/O helpers for evidence handling and case file management."""
+"""I/O helpers for file hashing and general utilities."""
 from __future__ import annotations
 
 from pathlib import Path

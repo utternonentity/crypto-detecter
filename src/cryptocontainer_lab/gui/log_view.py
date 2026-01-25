@@ -21,7 +21,7 @@ class LogView(QtWidgets.QTextEdit):
         self.setLineWrapMode(QtWidgets.QTextEdit.LineWrapMode.NoWrap)
         self.setFont(QtGui.QFont("Monospace"))
         self.document().setDefaultStyleSheet("pre { margin: 0; }")
-        self.setPlaceholderText("Log messages will appear here…")
+        self.setPlaceholderText("Здесь будут появляться сообщения журнала…")
 
     @property
     def max_lines(self) -> int:
